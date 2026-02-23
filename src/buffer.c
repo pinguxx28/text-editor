@@ -125,32 +125,15 @@ void save_buffer_to_file(buffer_t *buffer, char *pathname) {
 	if (fclose(file) == EOF) die("fclose in save_buffer_to_file");
 }
 
-bool create_new_line(buffer_t *buffer, size_t row, size_t column) {
-	if (buffer == NULL) die("buffer is null in create_new_line");
-	if (buffer->lines == NULL) die("buffer lines is null in create_new_line");
-	if (buffer->size >= buffer->capacity) die("buffer size is bigger than buffer capacity in create_new_line");
-	if (row >= buffer->capacity) die("row is bigger than buffer capacity in create_new_line");
-	if (buffer->lines[row] == NULL) die("buffer->lines[row] is null in create_new_line");
-
-	line_t *line = get_line_from_buffer(buffer, row);
-	bool split_line = column != line->length - 1;
-
-	char *line_start = malloc(column + 1);
-	if (line_start == NULL) die("line_start malloc in create_new_line");
-	char *line_end = malloc(line->length - column + 1);
-	if (line_end == NULL)   die("lien_end malloc in create_new_line");
+bool create_new_empty_line(buffer_t *buffer, size_t row) {
+	if (buffer == NULL) die("buffer is null in create_new_empty_line");
+	if (buffer->lines == NULL) die("buffer lines is null in create_new_empty_line");
+	if (buffer->size >= buffer->capacity) die("buffer size is bigger than buffer capacity in create_new_empty_line");
+	if (row >= buffer->capacity) die("row is bigger than buffer capacity in create_new_empty_line");
+	if (row >= buffer->size) die("row is bigger than buffer size in create_new_empty_line");
+	if (buffer->lines[row] == NULL) die("buffer->lines[row] is null in create_new_empty_line");
 
 	bool should_redraw = false;
-
-	if (split_line) {
-		strncpy(line_start, line->text, column);
-		line_start[column] = '\0';
-
-		strncpy(line_end, line->text + column, line->length - column);
-		line_end[line->length - column] = '\0';
-
-		should_redraw = true;
-	}
 
 	if (row != buffer->size) {
 		memmove(
@@ -160,23 +143,47 @@ bool create_new_line(buffer_t *buffer, size_t row, size_t column) {
 		should_redraw = true;
 	}
 
-	if (split_line) {
-		free_line(buffer->lines[row]);
-		buffer->lines[row] = init_line(line_start);
+	buffer->size++;
+	return should_redraw;
+}
 
-		// Don't free row + 1 because row + 1 == row this would lead to a double free
-		// free_line(buffer->lines[row + 1]);
-		buffer->lines[row + 1] = init_line(line_end);
-	} else {
-		free_line(buffer->lines[row + 1]);
-		buffer->lines[row + 1] = init_line("");
+void split_current_line(buffer_t *buffer, size_t row, size_t column) {
+	if (buffer == NULL) die("buffer is null in split_current_line_line");
+	if (buffer->lines == NULL) die("buffer lines is null in split_current_line_line");
+	if (buffer->size >= buffer->capacity) die("buffer size is bigger than buffer capacity in split_current_line_line");
+	if (row >= buffer->capacity) die("row is bigger than buffer capacity in split_current_line_line");
+	if (row >= buffer->size) die("row is bigger than buffer size in split_current_line_line");
+	if (buffer->lines[row] == NULL) die("buffer->lines[row] is null in split_current_line_line");
+
+	line_t *line = get_line_from_buffer(buffer, row);
+
+	char *line_start = malloc(column + 1);
+	if (line_start == NULL) die("line_start malloc in create_new_line");
+	strncpy(line_start, line->text, column);
+	line_start[column] = '\0';
+	
+	char *line_end = malloc(line->length - column + 1);
+	if (line_end == NULL)   die("lien_end malloc in create_new_line");
+	strncpy(line_end, line->text + column, line->length - column);
+	line_end[line->length - column] = '\0';
+
+	if (row != buffer->size) {
+		memmove(
+			&buffer->lines[row + 1],
+			&buffer->lines[row],
+			(buffer->size - row) * sizeof(line_t));
 	}
+
+	free_line(buffer->lines[row]);
+	buffer->lines[row] = init_line(line_start);
+	// Don't free row + 1 because row + 1 == row this would lead to a double free
+	// free_line(buffer->lines[row + 1]);
+	buffer->lines[row + 1] = init_line(line_end);
 
 	buffer->size++;
 
 	free(line_start);
 	free(line_end);
-	return should_redraw;
 }
 
 bool remove_empty_line(buffer_t *buffer, size_t line) {

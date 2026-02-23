@@ -76,13 +76,20 @@ int main(int argc, char **argv) {
 		save_cursor_pos(cursor);
 
 		if (key == ENTER) {
-			bool should_redraw = create_new_line(buffer, cursor->y, cursor->x);
-
-			if (should_redraw) {
-				cursor->x = 0;
-				set_cursor_pos(cursor);
-				reprint_buffer_from_line(buffer, cursor->y);
+			// split line
+			if (cursor->x != get_line_from_buffer(buffer, cursor->y)->length - 1) {
+				split_current_line(buffer, cursor->y, cursor->x);
+			} else {
+				if (!create_new_empty_line(buffer, cursor->y)) {
+					restore_cursor_pos(cursor);
+					move_down(cursor, buffer, MIN);
+					continue;
+				}
 			}
+
+			cursor->x = 0;
+			set_cursor_pos(cursor);
+			reprint_buffer_from_line(buffer, cursor->y);
 
 			restore_cursor_pos(cursor);
 
