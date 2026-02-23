@@ -150,6 +150,9 @@ int main(int argc, char **argv) {
 
 	if (save_file) {
 		save_buffer_to_file(buffer, argv[1]);
+		DEBUG("Saved file to %s\n", argv[1]);
+	} else {
+		DEBUG("Exited without saving\n");
 	}
 
 	free_buffer(buffer);
