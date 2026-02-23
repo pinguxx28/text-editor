@@ -96,9 +96,17 @@ void move_up(cursor_t *cursor, buffer_t *buffer, vert_move_t vert_move) {
 void move_down(cursor_t *cursor, buffer_t *buffer, vert_move_t vert_move) {
 	if (cursor == NULL) die("cursor is null in move_down");
 	if (buffer == NULL) die("buffer is null in move_down");
-	if (cursor->y >= MAX_BUFFER_LINES) return;
-	if (cursor->y >= buffer->size - 1) return;
-	move_vertical(cursor, buffer, vert_move, 1);
+	if (buffer->lines == NULL) die("buffer lines is null in move_down");
+	if (buffer->lines[cursor->y] == NULL) die("buffer->lines[cursor->y] is null in move_down");
+	if (cursor->y >= MAX_NUM_OF_BUFFER_LINES) return;
+	if (cursor->y > buffer->size - 1) return;
+
+	if (cursor->y == buffer->size - 1) {
+		cursor->x = buffer->lines[cursor->y]->length;
+		set_cursor_pos(cursor);
+	} else {
+		move_vertical(cursor, buffer, vert_move, 1);
+	}
 }
 
 void move_right(cursor_t *cursor, buffer_t *buffer) {
