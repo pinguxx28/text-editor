@@ -3,7 +3,9 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#define MAX_BUFFER_LINES 16
+#define BUFFER_CAPACITY_MULTIPLIER 2
+#define DEFAULT_NUM_OF_BUFFER_LINES 256
+#define MAX_NUM_OF_BUFFER_LINES 4096
 
 typedef struct {
 	line_t **lines;

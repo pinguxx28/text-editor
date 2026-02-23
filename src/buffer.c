@@ -11,11 +11,11 @@ buffer_t *init_buffer(void) {
 	buffer_t *buffer = malloc(sizeof(buffer_t));
 	if (buffer == NULL) die("malloc in init_buffer");
 
-	buffer->lines = malloc(sizeof(line_t) * MAX_BUFFER_LINES);
+	buffer->lines = malloc(sizeof(line_t) * DEFAULT_NUM_OF_BUFFER_LINES);
 	if (buffer->lines == NULL) die("malloc in init_buffer (lines)");
 
 	buffer->size = 0;
-	buffer->capacity = MAX_BUFFER_LINES;
+	buffer->capacity = DEFAULT_NUM_OF_BUFFER_LINES;
 	return buffer;
 }
 
@@ -61,12 +61,26 @@ void load_into_buffer(buffer_t *buffer, char *pathname) {
 	size_t len = 0;
 	ssize_t nread;
 
+	size_t line_num = 0;
+
 	while ((nread = getline(&line, &len, file)) != -1) {
 		if (line[nread - 1] == '\n') {
 			line[nread - 1] = '\0';
 		}
 
 		add_line(buffer, line);
+
+		line_num++;
+		if (line_num >= buffer->capacity) {
+			buffer->capacity *= BUFFER_CAPACITY_MULTIPLIER;
+
+			if (buffer->capacity > MAX_NUM_OF_BUFFER_LINES) {
+				buffer->capacity = MAX_NUM_OF_BUFFER_LINES;
+			}
+
+			buffer->lines = realloc(buffer->lines, sizeof(line_t) * buffer->capacity);
+			if (buffer->lines == NULL) die("buffer lines is null after realloc in load_into_buffer");
+		}
 	}
 
 	free(line);
