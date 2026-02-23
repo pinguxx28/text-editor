@@ -17,9 +17,7 @@ buffer_t *init_buffer(void) {
 	buffer->size = 0;
 	buffer->capacity = DEFAULT_NUM_OF_BUFFER_LINES;
 	return buffer;
-}
-
-void free_buffer(buffer_t *buffer) {
+} void free_buffer(buffer_t *buffer) {
 	if (buffer == NULL) die("buffer is null in free_buffer");
 	if (buffer->lines == NULL) die("buffer lines is null in free_buffer");
 
@@ -39,8 +37,17 @@ void free_buffer(buffer_t *buffer) {
 	buffer = NULL;
 }
 
+line_t *get_line_from_buffer(buffer_t *buffer, size_t index) {
+	if (buffer == NULL) die("buffer is null in get_line");
+	if (buffer->lines == NULL) die("buffer lines is null in get_line");
+	if (index >= buffer->size) die("index is bigger than buffer size in get_line");
+	if (index >= buffer->capacity) die("index is bigger than buffer capacity in get_line");
+	if (buffer->lines[index] == NULL) die("buffer->lines[index] is null in get_line");
 
-void add_line(buffer_t *buffer, char *line) {
+	return buffer->lines[index];
+}
+
+void add_line_to_end_of_buffer(buffer_t *buffer, char *line) {
 	if (line == NULL) die("line is null in add_line");
 	if (buffer == NULL) die("buffer is null in add_line");
 	if (buffer->lines == NULL) die("buffer lines is null in add_line");
@@ -50,7 +57,19 @@ void add_line(buffer_t *buffer, char *line) {
 	buffer->size++;
 }
 
-void load_into_buffer(buffer_t *buffer, char *pathname) {
+void print_buffer(buffer_t *buffer) {
+	if (buffer == NULL) die("buffer is null in print_buffer");
+	if (buffer->lines == NULL) die("buffer lines is null in print_buffer");
+
+	for (size_t i = 0; i < buffer->size; i++) {
+		if (buffer->lines[i] == NULL) die("buffer->lines[i] is null in print_buffer");
+
+		print_line_here(buffer->lines[i]);
+		if (write(STDOUT_FILENO, "\033[1E", 4) == -1) die("write in print_buffer");
+	}
+}
+
+void load_file_into_buffer(buffer_t *buffer, char *pathname) {
 	if (buffer == NULL) die("buffer is null in load_into_buffer");
 	if (pathname == NULL) die("pathname is null in load_into_buffer");
 
@@ -68,7 +87,7 @@ void load_into_buffer(buffer_t *buffer, char *pathname) {
 			line[nread - 1] = '\0';
 		}
 
-		add_line(buffer, line);
+		add_line_to_end_of_buffer(buffer, line);
 
 		line_num++;
 		if (line_num >= buffer->capacity) {
@@ -95,7 +114,7 @@ void save_buffer_to_file(buffer_t *buffer, char *pathname) {
 	if (file == NULL) die("fopen in save_buffer_into_file");
 
 	for (size_t i = 0; i < buffer->size; i++) {
-		line_t *line = get_line(buffer, i);
+		line_t *line = get_line_from_buffer(buffer, i);
 
 		if (line->length > 0) {
 			if (fwrite(line->text, sizeof(char), line->length, file) == 0) die("fwrite in save_buffer_to_file");
@@ -106,28 +125,6 @@ void save_buffer_to_file(buffer_t *buffer, char *pathname) {
 	if (fclose(file) == EOF) die("fclose in save_buffer_to_file");
 }
 
-line_t *get_line(buffer_t *buffer, size_t index) {
-	if (buffer == NULL) die("buffer is null in get_line");
-	if (buffer->lines == NULL) die("buffer lines is null in get_line");
-	if (index >= buffer->size) die("index is bigger than buffer size in get_line");
-	if (index >= buffer->capacity) die("index is bigger than buffer capacity in get_line");
-	if (buffer->lines[index] == NULL) die("buffer->lines[index] is null in get_line");
-
-	return buffer->lines[index];
-}
-
-void print_buffer(buffer_t *buffer) {
-	if (buffer == NULL) die("buffer is null in print_buffer");
-	if (buffer->lines == NULL) die("buffer lines is null in print_buffer");
-
-	for (size_t i = 0; i < buffer->size; i++) {
-		if (buffer->lines[i] == NULL) die("buffer->lines[i] is null in print_buffer");
-
-		print_line_here(buffer->lines[i]);
-		if (write(STDOUT_FILENO, "\033[1E", 4) == -1) die("write in print_buffer");
-	}
-}
-
 bool create_new_line(buffer_t *buffer, size_t row, size_t column) {
 	if (buffer == NULL) die("buffer is null in create_new_line");
 	if (buffer->lines == NULL) die("buffer lines is null in create_new_line");
@@ -135,7 +132,7 @@ bool create_new_line(buffer_t *buffer, size_t row, size_t column) {
 	if (row >= buffer->capacity) die("row is bigger than buffer capacity in create_new_line");
 	if (buffer->lines[row] == NULL) die("buffer->lines[row] is null in create_new_line");
 
-	line_t *line = get_line(buffer, row);
+	line_t *line = get_line_from_buffer(buffer, row);
 	bool split_line = column != line->length - 1;
 
 	char *line_start = malloc(column + 1);
@@ -216,8 +213,8 @@ void remove_line_and_append_to_previous(buffer_t *buffer, size_t line) {
 	if (buffer->lines[line] == NULL) die("buffer->lines[line] is null in remove_line_and_append_to_previous");
 	if (buffer->lines[line - 1] == NULL) die("buffer->lines[line-1] is null in remove_line_and_append_to_previous");
 
-	line_t *current_line = get_line(buffer, line);
-	line_t *previous_line = get_line(buffer, line - 1);
+	line_t *current_line = get_line_from_buffer(buffer, line);
+	line_t *previous_line = get_line_from_buffer(buffer, line - 1);
 	const size_t new_len = current_line->length + previous_line->length;
 	const size_t new_capacity = new_len * 2;
 
@@ -242,7 +239,7 @@ void remove_line_and_append_to_previous(buffer_t *buffer, size_t line) {
 	buffer->size--;
 }
 
-void redraw_lines(buffer_t *buffer, size_t line) {
+void reprint_buffer_from_line(buffer_t *buffer, size_t line) {
 	if (buffer == NULL) die("buffer is null in redraw_lines");
 	if (buffer->lines == NULL) die("buffer lines is null in redraw_lines");
 	if (line >= buffer->size) die("line is bigger than buffer size in redraw_lines");

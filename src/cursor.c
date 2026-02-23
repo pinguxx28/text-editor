@@ -66,7 +66,7 @@ static void move_vertical(cursor_t *cursor, buffer_t *buffer, vert_move_t vert_m
 
 	cursor->y += direction;
 
-	const size_t len = get_line(buffer, cursor->y)->length;
+	const size_t len = get_line_from_buffer(buffer, cursor->y)->length;
 
 	switch (vert_move) {
 		case STAY:
@@ -113,7 +113,7 @@ void move_right(cursor_t *cursor, buffer_t *buffer) {
 	if (cursor == NULL) die("cursor is null in move_right");
 	if (buffer == NULL) die("buffer is null in move_right");
 	if (cursor->x >= MAX_LINE_CAPACITY) return;
-	if (cursor->x >= get_line(buffer, cursor->y)->length) return;
+	if (cursor->x >= get_line_from_buffer(buffer, cursor->y)->length) return;
 
 	if (write(STDOUT_FILENO, "\033[1C", 4) == -1) {
 		die("write in move_right");

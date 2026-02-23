@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
 	if (setvbuf(stderr, NULL, _IONBF, 0)) die("setvbuf in main");
 
 	buffer_t *buffer = init_buffer();
-	load_into_buffer(buffer, argv[1]);
+	load_file_into_buffer(buffer, argv[1]);
 
 	terminal_enable_raw_mode();
 
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 			if (should_redraw) {
 				cursor->x = 0;
 				set_cursor_pos(cursor);
-				redraw_lines(buffer, cursor->y);
+				reprint_buffer_from_line(buffer, cursor->y);
 			}
 
 			restore_cursor_pos(cursor);
@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
 			continue;
 		}
 
-		line_t *line = get_line(buffer, cursor->y);
+		line_t *line = get_line_from_buffer(buffer, cursor->y);
 
 		if (key == BACKSPACE_1 || key == BACKSPACE_2) {
 			if (cursor->x == 0 && cursor->y == 0) continue;
@@ -102,12 +102,12 @@ int main(int argc, char **argv) {
 				if (line->length == 0) {
 					bool should_redraw = remove_empty_line(buffer, cursor->y+1);
 					move_down(cursor, buffer, MIN);
-					if (should_redraw) redraw_lines(buffer, cursor->y);
+					if (should_redraw) reprint_buffer_from_line(buffer, cursor->y);
 				} else {
 					remove_line_and_append_to_previous(buffer, cursor->y+1);
 					cursor->x = 0;
 					set_cursor_pos(cursor);
-					redraw_lines(buffer, cursor->y);
+					reprint_buffer_from_line(buffer, cursor->y);
 				}
 
 				cursor->y = buffer->size;
