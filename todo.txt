@@ -1,0 +1,5 @@
+scrolling
+syntax highlighting
+search
+status bar
+efficient rendering
