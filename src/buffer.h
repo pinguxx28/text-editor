@@ -26,8 +26,6 @@ void reprint_buffer_from_line(buffer_t *buffer, size_t line);
 void load_file_into_buffer(buffer_t *buffer, char *pathname);
 void save_buffer_to_file(buffer_t *buffer, char *pathname);
 
- create_new_line(buffer_t *buffer, size_t line, size_t column);
-
 // new line functions
 bool create_new_empty_line(buffer_t *buffer, size_t line);
 void split_current_line(buffer_t *buffer, size_t line, size_t column);

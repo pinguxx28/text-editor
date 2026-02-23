@@ -158,12 +158,12 @@ void split_current_line(buffer_t *buffer, size_t row, size_t column) {
 	line_t *line = get_line_from_buffer(buffer, row);
 
 	char *line_start = malloc(column + 1);
-	if (line_start == NULL) die("line_start malloc in create_new_line");
+	if (line_start == NULL) die("line_start malloc in split_current_line");
 	strncpy(line_start, line->text, column);
 	line_start[column] = '\0';
 	
 	char *line_end = malloc(line->length - column + 1);
-	if (line_end == NULL)   die("lien_end malloc in create_new_line");
+	if (line_end == NULL)   die("lien_end malloc in split_current_line");
 	strncpy(line_end, line->text + column, line->length - column);
 	line_end[line->length - column] = '\0';
 
